@@ -1,17 +1,39 @@
-import { Page, expect } from '@playwright/test';
-import { ENV } from '../utils/envHelper';
+import { Page } from '@playwright/test';
+import { config } from '../config/config';
 
 export class LoginPage {
-  constructor(private page: Page) {}
+  private page: Page;
 
-  async goto() {
-    await this.page.goto(ENV.BASE_URL + '/login');
+  // Locators
+  private usernameInput = '#username';
+  private passwordInput = '#password';
+  private loginButton = '#login-button';
+
+  constructor(page: Page) {
+    this.page = page;
   }
 
-  async login(username: string, password: string) {
-    await this.page.fill('#username', username);
-    await this.page.fill('#password', password);
-    await this.page.click('#loginButton');
-    await expect(this.page.locator('text=Employee Form')).toBeVisible({ timeout: 10000 });
+  async navigateToApp(): Promise<void> {
+    await this.page.goto(config.baseUrl);
+  }
+
+  async enterUsername(username: string): Promise<void> {
+    await this.page.fill(this.usernameInput, username);
+  }
+
+  async enterPassword(password: string): Promise<void> {
+    await this.page.fill(this.passwordInput, password);
+  }
+
+  async clickLoginButton(): Promise<void> {
+    await this.page.click(this.loginButton);
+  }
+
+  async login(username?: string, password?: string): Promise<void> {
+    await this.navigateToApp();
+    await this.enterUsername(username || config.username);
+    await this.enterPassword(password || config.password);
+    await this.clickLoginButton();
+    await this.page.waitForLoadState('networkidle');
   }
 }

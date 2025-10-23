@@ -1,0 +1,11 @@
+node_modules/
+dist/
+reports/
+*.log
+.env
+package-lock.json
+*.png
+*.jpg
+screenshots/
+test-results/
+playwright-report/

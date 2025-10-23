@@ -1,22 +1,33 @@
 {
-  "name": "playwright-bdd-ui-validator-ts",
+  "name": "playwright-cucumber-framework",
   "version": "1.0.0",
-  "private": true,
+  "description": "Playwright Test Automation Framework with Cucumber and TypeScript",
+  "main": "index.js",
   "scripts": {
     "test": "cucumber-js",
-    "start:demo": "node demo/server.js",
-    "install-browsers": "npx playwright install --with-deps || npx playwright install",
-    "prepare": "npm run install-browsers"
+    "test:parallel": "cucumber-js --parallel 2",
+    "report": "node src/reports/generate-report.js",
+    "test:report": "npm test && npm run report",
+    "verify": "node verify-setup.js",
+    "browser_install": "npx playwright install",
+    "prepare": "npm run browser_install"
   },
-  "dependencies": {
-    "@cucumber/cucumber": "11.3.0",
-    "@playwright/test": "1.56.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.18.2"
-  },
+  "keywords": [
+    "playwright",
+    "cucumber",
+    "typescript",
+    "automation"
+  ],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "ts-node": "^10.9.1",
+    "@cucumber/cucumber": "^11.3.0",
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.10.5",
+    "dotenv": "^16.4.7",
+    "fs-extra": "^11.2.0",
+    "multiple-cucumber-html-reporter": "^3.8.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
-  },
-  "type": "module"
+  }
 }

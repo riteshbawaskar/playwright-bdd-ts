@@ -1,3 +1,16 @@
-export default {
-  default: `--require-module ts-node/register             --require ./features/**/*.ts             --require ./features/support/**/*.ts             --format progress             --publish-quiet             --parallel 4             ./features/**/*.feature`
+module.exports = {
+  default: {
+    require: ['src/steps/**/*.ts', 'src/hooks/**/*.ts'],
+    requireModule: ['ts-node/register'],
+    format: [
+      'json:reports/cucumber-report.json',
+      'html:reports/cucumber-report.html',
+      'progress-bar'
+    ],
+    formatOptions: {
+      snippetInterface: 'async-await'
+    },
+    publishQuiet: true,
+    parallel: 2
+  }
 };
