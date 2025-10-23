@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Employee Form</title>
+  <style>
+    #techSkillSection { display: none; margin-top: 10px; }
+    .error { color: red; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Employee Form</h1>
+  <form id="employeeForm">
+    <label>Employee Name:
+      <input id="empName" name="empName" />
+      <span id="empNameError" class="error">Name is required</span>
+    </label>
+    <br/><br/>
+    <label>Department:
+      <select id="department" name="department">
+        <option value="">--Select--</option>
+        <option>HR</option>
+        <option>IT</option>
+        <option>Finance</option>
+      </select>
+    </label>
+    <div id="techSkillSection">
+      <label>Tech Skills: <input id="techSkills" /></label>
+    </div>
+    <br/>
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    const dept = document.getElementById('department');
+    const tech = document.getElementById('techSkillSection');
+    const empName = document.getElementById('empName');
+    const empNameError = document.getElementById('empNameError');
+
+    dept.addEventListener('change', () => {
+      if (dept.value === 'IT') tech.style.display = 'block';
+      else tech.style.display = 'none';
+    });
+
+    document.getElementById('employeeForm').addEventListener('submit', (e) => {
+      if (!empName.value.trim()) {
+        e.preventDefault();
+        empNameError.style.display = 'inline';
+      } else {
+        empNameError.style.display = 'none';
+        alert('Form submitted (demo)');
+      }
+    });
+  </script>
+</body>
+</html>

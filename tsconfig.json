@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": [
+      "@cucumber/cucumber",
+      "@playwright/test",
+      "node"
+    ]
+  },
+  "include": [
+    "features/**/*.ts",
+    "src/**/*.ts"
+  ]
+}
