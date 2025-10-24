@@ -28,6 +28,70 @@ function printHeader(title) {
   printSeparator();
 }
 
+// Validate JSON report structure
+function validateJsonReport(jsonPath) {
+  try {
+    const data = fs.readFileSync(jsonPath, 'utf8');
+    
+    // Check if file is empty
+    if (!data || data.trim().length === 0) {
+      return { valid: false, error: 'JSON report file is empty - tests may not have run' };
+    }
+    
+    // Parse JSON
+    let results;
+    try {
+      results = JSON.parse(data);
+    } catch (parseError) {
+      return { valid: false, error: `Invalid JSON format: ${parseError.message}` };
+    }
+    
+    // Check if results is an array
+    if (!Array.isArray(results)) {
+      return { valid: false, error: 'JSON report is not an array - structure is incorrect' };
+    }
+    
+    // Check if array is empty
+    if (results.length === 0) {
+      return { 
+        valid: false, 
+        error: 'No features found - tests may have been skipped or failed to run' 
+      };
+    }
+    
+    // Validate each feature has required properties
+    for (let i = 0; i < results.length; i++) {
+      const feature = results[i];
+      
+      if (!feature.name) {
+        return { 
+          valid: false, 
+          error: `Feature at index ${i} is missing 'name' property - report is corrupted` 
+        };
+      }
+      
+      if (!feature.elements || !Array.isArray(feature.elements)) {
+        return { 
+          valid: false, 
+          error: `Feature "${feature.name}" is missing 'elements' - test execution was incomplete` 
+        };
+      }
+      
+      if (feature.elements.length === 0) {
+        return { 
+          valid: false, 
+          error: `Feature "${feature.name}" has no scenarios - test may have been interrupted` 
+        };
+      }
+    }
+    
+    return { valid: true, data: results };
+    
+  } catch (error) {
+    return { valid: false, error: `Error reading JSON file: ${error.message}` };
+  }
+}
+
 // Get metadata for the report
 function getMetadata() {
   const platform = process.platform;
@@ -224,9 +288,35 @@ function generateReport() {
       process.exit(1);
     }
     
+    // Validate JSON report structure
+    printColor('🔍 Validating JSON report...', colors.cyan);
+    const validation = validateJsonReport(jsonReport);
+    
+    if (!validation.valid) {
+      printColor('❌ Error: Invalid or incomplete JSON report!', colors.red);
+      console.log(`   Issue: ${validation.error}`);
+      console.log('');
+      printColor('💡 Possible causes:', colors.yellow);
+      console.log('   1. Tests were interrupted (Ctrl+C)');
+      console.log('   2. No tests ran or all were skipped');
+      console.log('   3. Test execution failed');
+      console.log('');
+      printColor('🔧 Quick Fix:', colors.cyan);
+      console.log('   rm -rf reports/ && npm test && npm run report');
+      console.log('');
+      printColor('📋 Detailed Diagnosis:', colors.cyan);
+      console.log('   node diagnose-json-report.js');
+      console.log('');
+      process.exit(1);
+    }
+    
+    printColor('✓ JSON report is valid', colors.green);
+    printColor(`✓ Found ${validation.data.length} feature(s)`, colors.green);
+    console.log('');
+    
     // Analyze results
     printColor('📊 Analyzing test results...', colors.cyan);
-    const stats = analyzeResults(jsonReport);
+    const stats = analyzeResults(validation.data);
     
     // Generate HTML report
     printColor('🔨 Generating HTML report...', colors.cyan);
