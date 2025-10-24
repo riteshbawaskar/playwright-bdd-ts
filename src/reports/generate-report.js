@@ -1,5 +1,4 @@
-// src/reports/generate-report.js
-const report = require('multiple-cucumber-html-reporter');
+const reporter = require('multiple-cucumber-html-reporter');
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -14,6 +13,7 @@ const colors = {
   blue: '\x1b[34m'
 };
 
+// Print colored console messages
 function printColor(message, color = colors.reset) {
   console.log(`${color}${message}${colors.reset}`);
 }
@@ -26,60 +26,6 @@ function printHeader(title) {
   printSeparator();
   printColor(`  ${title}`, colors.bright + colors.cyan);
   printSeparator();
-}
-
-// Validate JSON report structure
-function validateJsonReport(jsonPath) {
-  try {
-    const data = fs.readFileSync(jsonPath, 'utf8');
-    
-    // Check if file is empty
-    if (!data || data.trim().length === 0) {
-      return { valid: false, error: 'JSON report file is empty' };
-    }
-    
-    // Parse JSON
-    let results;
-    try {
-      results = JSON.parse(data);
-    } catch (parseError) {
-      return { valid: false, error: `Invalid JSON format: ${parseError.message}` };
-    }
-    
-    // Check if results is an array
-    if (!Array.isArray(results)) {
-      return { valid: false, error: 'JSON report is not an array' };
-    }
-    
-    // Check if array is empty
-    if (results.length === 0) {
-      return { valid: false, error: 'No features found in report. Did tests run successfully?' };
-    }
-    
-    // Validate each feature has required properties
-    for (let i = 0; i < results.length; i++) {
-      const feature = results[i];
-      
-      if (!feature.name) {
-        return { 
-          valid: false, 
-          error: `Feature at index ${i} is missing 'name' property. Report may be corrupted.` 
-        };
-      }
-      
-      if (!feature.elements || !Array.isArray(feature.elements)) {
-        return { 
-          valid: false, 
-          error: `Feature "${feature.name}" is missing 'elements' (scenarios). Report may be incomplete.` 
-        };
-      }
-    }
-    
-    return { valid: true, data: results };
-    
-  } catch (error) {
-    return { valid: false, error: `Error reading JSON file: ${error.message}` };
-  }
 }
 
 // Get metadata for the report
@@ -148,8 +94,11 @@ function getCustomData() {
 }
 
 // Analyze test results from JSON
-function analyzeResults(results) {
+function analyzeResults(jsonPath) {
   try {
+    const data = fs.readFileSync(jsonPath, 'utf8');
+    const results = JSON.parse(data);
+    
     let totalScenarios = 0;
     let passedScenarios = 0;
     let failedScenarios = 0;
@@ -208,7 +157,7 @@ function analyzeResults(results) {
       passedSteps,
       failedSteps,
       skippedSteps,
-      totalDuration: (totalDuration / 1000000000).toFixed(2),
+      totalDuration: (totalDuration / 1000000000).toFixed(2), // Convert to seconds
       passPercentage
     };
   } catch (error) {
@@ -275,39 +224,14 @@ function generateReport() {
       process.exit(1);
     }
     
-    // Validate JSON report
-    printColor('🔍 Validating JSON report...', colors.cyan);
-    const validation = validateJsonReport(jsonReport);
-    
-    if (!validation.valid) {
-      printColor('❌ Error: Invalid or incomplete JSON report!', colors.red);
-      console.log(`   Issue: ${validation.error}`);
-      console.log('');
-      printColor('💡 Possible causes:', colors.yellow);
-      console.log('   1. Tests were interrupted before completion');
-      console.log('   2. No tests were executed');
-      console.log('   3. Test execution failed');
-      console.log('   4. JSON report is corrupted');
-      console.log('');
-      printColor('🔧 Solutions:', colors.cyan);
-      console.log('   1. Run tests again: npm test');
-      console.log('   2. Check test execution logs for errors');
-      console.log('   3. Ensure at least one scenario executed successfully');
-      console.log('   4. Delete reports folder and run tests again');
-      console.log('');
-      process.exit(1);
-    }
-    
-    printColor('✓ JSON report is valid', colors.green);
-    
     // Analyze results
     printColor('📊 Analyzing test results...', colors.cyan);
-    const stats = analyzeResults(validation.data);
+    const stats = analyzeResults(jsonReport);
     
     // Generate HTML report
     printColor('🔨 Generating HTML report...', colors.cyan);
     
-    report.generate({
+    reporter.generate({
       jsonDir: reportsDir,
       reportPath: reportsDir,
       reportName: 'Cucumber Test Execution Report',
@@ -416,7 +340,7 @@ function generateReport() {
     // Exit with appropriate code
     if (stats && stats.failedScenarios > 0) {
       printColor('\n⚠️  Some tests failed. Please review the report.', colors.yellow);
-      process.exit(0);
+      process.exit(0); // Don't fail on report generation
     } else if (stats && stats.passedScenarios > 0) {
       printColor('\n🎉 All tests passed!', colors.green);
       process.exit(0);
@@ -438,8 +362,7 @@ function generateReport() {
     console.error('   1. Make sure tests have run at least once');
     console.error('   2. Check if cucumber-report.json exists in reports folder');
     console.error('   3. Verify JSON report is valid (not corrupted)');
-    console.error('   4. Delete reports folder and run: npm test');
-    console.error('   5. Check that at least one test scenario completed');
+    console.error('   4. Run: npm test (to generate fresh test results)');
     console.error('');
     
     process.exit(1);
